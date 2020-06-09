@@ -7,9 +7,6 @@
 ##### धी
 
 
-### Cool
-
-
 ### Contact
 
 walkermy4@gmail.com
