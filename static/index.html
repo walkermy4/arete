@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arete - Wellness Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>αρετη</h1>
+            <div class="date-nav">
+                <button id="prev-day">&larr;</button>
+                <input type="date" id="date-picker">
+                <button id="next-day">&rarr;</button>
+            </div>
+        </header>
+
+        <div class="scores-grid">
+            <div class="score-card">
+                <div class="score-value" id="fitness-score">0</div>
+                <div class="score-label">Fitness</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value" id="tasks-score">0</div>
+                <div class="score-label">Tasks</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value" id="food-score">0</div>
+                <div class="score-label">Food</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value" id="sleep-score">0</div>
+                <div class="score-label">Sleep</div>
+            </div>
+        </div>
+
+        <section class="workout-section">
+            <h2>Workouts</h2>
+            <div id="workouts-container"></div>
+        </section>
+
+        <section class="tasks-section">
+            <h2>8AM - Todoist</h2>
+            <div id="tasks-container">
+                <div class="task-item">
+                    <input type="checkbox" class="task-checkbox">
+                    <input type="text" class="task-input" placeholder="Add a task...">
+                </div>
+            </div>
+            <button id="add-task-btn" class="add-btn">+ Add Task</button>
+        </section>
+
+        <section class="nutrition-section">
+            <h2>πυθαγορας - Nutrition</h2>
+            <div class="nutrition-target">Target: <span id="calorie-target">2400</span> kcal</div>
+
+            <div class="nutrition-grid">
+                <div class="nutrition-item">
+                    <label>Protein (g)</label>
+                    <input type="number" id="protein" class="nutrition-input">
+                    <div class="progress-bar">
+                        <div class="progress-fill protein-fill"></div>
+                    </div>
+                    <span class="target-label">Target: 175g</span>
+                </div>
+
+                <div class="nutrition-item">
+                    <label>Carbs (g)</label>
+                    <input type="number" id="carbs" class="nutrition-input">
+                    <div class="progress-bar">
+                        <div class="progress-fill carbs-fill"></div>
+                    </div>
+                    <span class="target-label">Target: 300g</span>
+                </div>
+
+                <div class="nutrition-item">
+                    <label>Fiber (g)</label>
+                    <input type="number" id="fiber" class="nutrition-input">
+                    <div class="progress-bar">
+                        <div class="progress-fill fiber-fill"></div>
+                    </div>
+                    <span class="target-label">Target: 22g</span>
+                </div>
+
+                <div class="nutrition-item">
+                    <label>Sugar (g)</label>
+                    <input type="number" id="sugar" class="nutrition-input">
+                    <div class="progress-bar">
+                        <div class="progress-fill sugar-fill"></div>
+                    </div>
+                    <span class="target-label">Target: 75g</span>
+                </div>
+
+                <div class="nutrition-item">
+                    <label>Fat (g)</label>
+                    <input type="number" id="fat" class="nutrition-input">
+                    <div class="progress-bar">
+                        <div class="progress-fill fat-fill"></div>
+                    </div>
+                    <span class="target-label">Target: 205g</span>
+                </div>
+
+                <div class="nutrition-item">
+                    <label>Salt (mg)</label>
+                    <input type="number" id="salt" class="nutrition-input">
+                    <div class="progress-bar">
+                        <div class="progress-fill salt-fill"></div>
+                    </div>
+                    <span class="target-label">Target: 4000mg</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="sleep-section">
+            <h2>9PM - Sleep</h2>
+            <div class="sleep-input-group">
+                <label>Sleep Hours:</label>
+                <input type="number" id="sleep-hours" min="0" max="24" step="0.5">
+            </div>
+        </section>
+
+        <button id="save-btn" class="save-btn">Save Progress</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

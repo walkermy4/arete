@@ -1,0 +1,308 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #4ecca3;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    color: #4ecca3;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #2d2d2d;
+    padding-bottom: 10px;
+}
+
+.date-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.date-nav button {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.date-nav button:hover {
+    background: #3d3d3d;
+}
+
+#date-picker {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    border: 1px solid #4ecca3;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.scores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.score-card {
+    background: #2d2d2d;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #3d3d3d;
+}
+
+.score-value {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #4ecca3;
+}
+
+.score-label {
+    font-size: 1rem;
+    color: #b0b0b0;
+    margin-top: 10px;
+}
+
+section {
+    background: #2d2d2d;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.workout-section {
+    margin-bottom: 25px;
+}
+
+.workout-block {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #252525;
+    border-radius: 8px;
+}
+
+.workout-time {
+    font-size: 1.2rem;
+    color: #4ecca3;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.exercise-item {
+    margin-bottom: 15px;
+}
+
+.exercise-name {
+    color: #e0e0e0;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.sets-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.set-checkbox {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    accent-color: #4ecca3;
+}
+
+.tasks-section {
+    margin-bottom: 25px;
+}
+
+.task-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.task-checkbox {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: #4ecca3;
+}
+
+.task-input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    color: #e0e0e0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.task-input:focus {
+    outline: none;
+    border-color: #4ecca3;
+}
+
+.add-btn {
+    background: #3d3d3d;
+    color: #e0e0e0;
+    border: 1px dashed #4ecca3;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 1rem;
+}
+
+.add-btn:hover {
+    background: #4d4d4d;
+}
+
+.nutrition-target {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #b0b0b0;
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.nutrition-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nutrition-item label {
+    color: #b0b0b0;
+    font-size: 0.95rem;
+}
+
+.nutrition-input {
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    color: #e0e0e0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.nutrition-input:focus {
+    outline: none;
+    border-color: #4ecca3;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #3d3d3d;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.protein-fill { background: #4ecca3; }
+.carbs-fill { background: #ffa726; }
+.fiber-fill { background: #d4a574; }
+.sugar-fill { background: #e0e0e0; }
+.fat-fill { background: #f48fb1; }
+.salt-fill { background: #90a4ae; }
+
+.target-label {
+    font-size: 0.85rem;
+    color: #808080;
+}
+
+.sleep-input-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sleep-input-group label {
+    font-size: 1.1rem;
+    color: #b0b0b0;
+}
+
+#sleep-hours {
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    color: #e0e0e0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 100px;
+}
+
+.save-btn {
+    background: #4ecca3;
+    color: #1a1a1a;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.save-btn:hover {
+    background: #45b890;
+}
+
+@media (max-width: 768px) {
+    .scores-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .nutrition-grid {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+}
