@@ -11,6 +11,11 @@ let nutritionTargets = {
     salt: 4000
 };
 
+let sleepTarget = {
+    min: 7,
+    max: 9
+};
+
 let charts = {
     fitness: null,
     tasks: null,
@@ -18,11 +23,90 @@ let charts = {
     sleep: null
 };
 
+// Auto-save configuration
+let autoSaveIndicatorTimeout = null;
+let isLoadingData = false;
+
+function triggerAutoSave() {
+    if (isLoadingData) return;
+    autoSaveData();
+}
+
+function autoSaveData() {
+    showAutoSaveIndicator('saving');
+    try {
+        const workouts = collectWorkoutData();
+        const tasks = collectTaskData();
+        const nutrition = collectNutritionData();
+        const sleepHours = parseFloat(document.getElementById('sleep-hours').value) || 0;
+
+        const scores = {
+            fitness: calculateFitnessScore(workouts),
+            tasks: calculateTasksScore(tasks),
+            food: calculateFoodScore(nutrition),
+            sleep: calculateSleepScore(sleepHours)
+        };
+
+        const dailyData = {
+            date: currentDate,
+            workouts: workouts,
+            tasks: tasks,
+            nutrition: nutrition,
+            sleep_hours: sleepHours,
+            scores: scores
+        };
+
+        saveToStorage(`arete-${currentDate}`, dailyData);
+        updateScores(scores);
+        updateCharts();
+        showAutoSaveIndicator('saved');
+    } catch (error) {
+        console.error('Auto-save failed:', error);
+        showAutoSaveIndicator('error');
+    }
+}
+
+function showAutoSaveIndicator(state) {
+    let indicator = document.getElementById('auto-save-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'auto-save-indicator';
+        document.querySelector('.left-panel').insertBefore(
+            indicator, document.querySelector('.left-panel').firstChild
+        );
+    }
+
+    if (autoSaveIndicatorTimeout) clearTimeout(autoSaveIndicatorTimeout);
+
+    switch(state) {
+        case 'saving':
+            indicator.textContent = 'Saving...';
+            indicator.className = 'auto-save-indicator saving';
+            indicator.style.opacity = '1';
+            break;
+        case 'saved':
+            indicator.textContent = 'All changes saved';
+            indicator.className = 'auto-save-indicator saved';
+            indicator.style.opacity = '1';
+            autoSaveIndicatorTimeout = setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 2000);
+            break;
+        case 'error':
+            indicator.textContent = 'Save failed';
+            indicator.className = 'auto-save-indicator error';
+            indicator.style.opacity = '1';
+            autoSaveIndicatorTimeout = setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 3000);
+            break;
+    }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    loadNutritionTargets();
+    loadAllSettings();
     initializeDatePicker();
-    loadWorkoutTemplate();
     loadDailyData();
     setupEventListeners();
     initializeCharts();
@@ -42,16 +126,51 @@ function setupEventListeners() {
         loadDailyData();
     });
     document.getElementById('add-task-btn').addEventListener('click', addTask);
-    document.getElementById('save-btn').addEventListener('click', saveData);
 
-    // Nutrition targets modal
-    document.getElementById('edit-targets-btn').addEventListener('click', openTargetsModal);
-    document.getElementById('save-targets-btn').addEventListener('click', saveNutritionTargets);
-    document.getElementById('cancel-targets-btn').addEventListener('click', closeTargetsModal);
+    // Settings modal
+    document.getElementById('settings-btn').addEventListener('click', openSettingsModal);
+    document.getElementById('save-settings-btn').addEventListener('click', saveAllSettings);
+    document.getElementById('cancel-settings-btn').addEventListener('click', closeSettingsModal);
 
-    // Auto-update progress bars on nutrition input
+    // Settings tabs
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => switchSettingsTab(e.target.dataset.tab));
+    });
+
+    // Add workout block
+    document.getElementById('add-workout-block-btn').addEventListener('click', addWorkoutBlockToEditor);
+
+    // Auto-save for static inputs
     document.querySelectorAll('.nutrition-input').forEach(input => {
-        input.addEventListener('input', updateNutritionProgress);
+        input.addEventListener('input', () => {
+            updateNutritionProgress();
+            triggerAutoSave();
+        });
+    });
+    document.getElementById('sleep-hours').addEventListener('input', triggerAutoSave);
+
+    // Event delegation for dynamic elements
+    setupEventDelegation();
+}
+
+function setupEventDelegation() {
+    const workoutsContainer = document.getElementById('workouts-container');
+    workoutsContainer.addEventListener('change', (e) => {
+        if (e.target.classList.contains('set-checkbox')) {
+            triggerAutoSave();
+        }
+    });
+
+    const tasksContainer = document.getElementById('tasks-container');
+    tasksContainer.addEventListener('change', (e) => {
+        if (e.target.classList.contains('task-checkbox')) {
+            triggerAutoSave();
+        }
+    });
+    tasksContainer.addEventListener('input', (e) => {
+        if (e.target.classList.contains('task-input')) {
+            triggerAutoSave();
+        }
     });
 }
 
@@ -91,66 +210,285 @@ function updateTargetLabels() {
     document.getElementById('target-salt').textContent = nutritionTargets.salt;
 }
 
-function openTargetsModal() {
-    document.getElementById('modal-protein').value = nutritionTargets.protein;
-    document.getElementById('modal-carbs').value = nutritionTargets.carbs;
-    document.getElementById('modal-fiber').value = nutritionTargets.fiber;
-    document.getElementById('modal-sugar').value = nutritionTargets.sugar;
-    document.getElementById('modal-fat').value = nutritionTargets.fat;
-    document.getElementById('modal-salt').value = nutritionTargets.salt;
-    document.getElementById('targets-modal').style.display = 'block';
+
+// Settings Management
+function loadAllSettings() {
+    loadNutritionTargets();
+    loadSleepTarget();
+    loadWorkoutTemplateFromStorage();
 }
 
-function closeTargetsModal() {
-    document.getElementById('targets-modal').style.display = 'none';
+function loadSleepTarget() {
+    const saved = loadFromStorage('arete-sleep-target');
+    if (saved) {
+        sleepTarget = saved;
+    }
 }
 
-function saveNutritionTargets() {
+function loadWorkoutTemplateFromStorage() {
+    const saved = loadFromStorage('arete-workout-template');
+    if (saved && saved.length > 0) {
+        workoutTemplate = saved;
+    } else {
+        // Use default hardcoded template
+        workoutTemplate = [
+            {
+                'time': '5AM',
+                'name': 'σθενος',
+                'exercises': [
+                    {'name': '[0*][10] - barbell press', 'sets': [false, false, false, false, false, false, false, false]}
+                ]
+            },
+            {
+                'time': '6AM',
+                'name': '',
+                'exercises': [
+                    {'name': '[30*][10] - dumbell curl', 'sets': [false, false, false, false, false, false, false, false]},
+                    {'name': '[8] wide', 'sets': [false], 'reps': 95}
+                ]
+            },
+            {
+                'time': '7AM',
+                'name': '',
+                'exercises': [
+                    {'name': 'machine row', 'sets': [false, false, false, false, false, false, false, false]}
+                ]
+            }
+        ];
+    }
+}
+
+
+// Settings Modal Controls
+function openSettingsModal() {
+    // Populate workout template editor
+    renderWorkoutTemplateEditor();
+
+    // Populate sleep target fields
+    document.getElementById('sleep-min').value = sleepTarget.min;
+    document.getElementById('sleep-max').value = sleepTarget.max;
+
+    // Populate nutrition targets
+    document.getElementById('settings-protein').value = nutritionTargets.protein;
+    document.getElementById('settings-carbs').value = nutritionTargets.carbs;
+    document.getElementById('settings-fiber').value = nutritionTargets.fiber;
+    document.getElementById('settings-sugar').value = nutritionTargets.sugar;
+    document.getElementById('settings-fat').value = nutritionTargets.fat;
+    document.getElementById('settings-salt').value = nutritionTargets.salt;
+
+    // Show modal on workout tab by default
+    switchSettingsTab('workout');
+    document.getElementById('settings-modal').style.display = 'block';
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings-modal').style.display = 'none';
+}
+
+function switchSettingsTab(tabName) {
+    // Remove active from all tabs
+    document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.settings-tab-content').forEach(content => content.classList.remove('active'));
+
+    // Add active to selected tab
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+}
+
+// Workout Template Editor
+function renderWorkoutTemplateEditor() {
+    const container = document.getElementById('workout-template-editor');
+    container.innerHTML = '';
+
+    workoutTemplate.forEach((workout, workoutIndex) => {
+        const blockDiv = document.createElement('div');
+        blockDiv.className = 'workout-block-editor';
+        blockDiv.dataset.workoutIndex = workoutIndex;
+
+        // Block header with time and name inputs
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'workout-block-header';
+
+        const timeInput = document.createElement('input');
+        timeInput.type = 'text';
+        timeInput.className = 'time-input';
+        timeInput.value = workout.time;
+        timeInput.placeholder = 'Time';
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'name-input';
+        nameInput.value = workout.name;
+        nameInput.placeholder = 'Workout Name';
+
+        const removeBlockBtn = document.createElement('button');
+        removeBlockBtn.className = 'remove-workout-block-btn';
+        removeBlockBtn.textContent = 'Remove Block';
+        removeBlockBtn.onclick = () => removeWorkoutBlock(workoutIndex);
+
+        headerDiv.appendChild(timeInput);
+        headerDiv.appendChild(nameInput);
+        headerDiv.appendChild(removeBlockBtn);
+        blockDiv.appendChild(headerDiv);
+
+        // Exercises
+        const exercisesDiv = document.createElement('div');
+        exercisesDiv.className = 'exercises-editor';
+
+        workout.exercises.forEach((exercise, exerciseIndex) => {
+            const exerciseDiv = document.createElement('div');
+            exerciseDiv.className = 'exercise-editor';
+
+            const exerciseNameInput = document.createElement('input');
+            exerciseNameInput.type = 'text';
+            exerciseNameInput.className = 'exercise-name-input';
+            exerciseNameInput.value = exercise.name;
+            exerciseNameInput.placeholder = 'Exercise name';
+
+            const setsCountInput = document.createElement('input');
+            setsCountInput.type = 'number';
+            setsCountInput.className = 'sets-count-input';
+            setsCountInput.value = exercise.sets.length;
+            setsCountInput.min = '1';
+            setsCountInput.max = '20';
+            setsCountInput.placeholder = 'Sets';
+
+            const removeExerciseBtn = document.createElement('button');
+            removeExerciseBtn.className = 'remove-exercise-btn';
+            removeExerciseBtn.textContent = 'Remove';
+            removeExerciseBtn.onclick = () => removeExercise(workoutIndex, exerciseIndex);
+
+            exerciseDiv.appendChild(exerciseNameInput);
+            exerciseDiv.appendChild(setsCountInput);
+            exerciseDiv.appendChild(removeExerciseBtn);
+            exercisesDiv.appendChild(exerciseDiv);
+        });
+
+        blockDiv.appendChild(exercisesDiv);
+
+        // Add exercise button
+        const addExerciseBtn = document.createElement('button');
+        addExerciseBtn.className = 'add-exercise-btn';
+        addExerciseBtn.textContent = '+ Add Exercise';
+        addExerciseBtn.onclick = () => addExercise(workoutIndex);
+        blockDiv.appendChild(addExerciseBtn);
+
+        container.appendChild(blockDiv);
+    });
+}
+
+function addWorkoutBlockToEditor() {
+    workoutTemplate.push({
+        time: '',
+        name: '',
+        exercises: [{name: '', sets: [false, false, false, false]}]
+    });
+    renderWorkoutTemplateEditor();
+}
+
+function removeWorkoutBlock(workoutIndex) {
+    if (workoutTemplate.length <= 1) {
+        alert('You must have at least one workout block');
+        return;
+    }
+    workoutTemplate.splice(workoutIndex, 1);
+    renderWorkoutTemplateEditor();
+}
+
+function addExercise(workoutIndex) {
+    workoutTemplate[workoutIndex].exercises.push({
+        name: '',
+        sets: [false, false, false, false]
+    });
+    renderWorkoutTemplateEditor();
+}
+
+function removeExercise(workoutIndex, exerciseIndex) {
+    if (workoutTemplate[workoutIndex].exercises.length <= 1) {
+        alert('You must have at least one exercise per workout block');
+        return;
+    }
+    workoutTemplate[workoutIndex].exercises.splice(exerciseIndex, 1);
+    renderWorkoutTemplateEditor();
+}
+
+function collectWorkoutTemplateFromEditor() {
+    const template = [];
+    const blocks = document.querySelectorAll('.workout-block-editor');
+
+    blocks.forEach(block => {
+        const workoutIndex = parseInt(block.dataset.workoutIndex);
+        const timeInput = block.querySelector('.time-input');
+        const nameInput = block.querySelector('.name-input');
+        const exerciseDivs = block.querySelectorAll('.exercise-editor');
+
+        const exercises = [];
+        exerciseDivs.forEach(exerciseDiv => {
+            const exerciseNameInput = exerciseDiv.querySelector('.exercise-name-input');
+            const setsCountInput = exerciseDiv.querySelector('.sets-count-input');
+            const setsCount = parseInt(setsCountInput.value) || 4;
+
+            exercises.push({
+                name: exerciseNameInput.value,
+                sets: Array(setsCount).fill(false)
+            });
+        });
+
+        template.push({
+            time: timeInput.value,
+            name: nameInput.value,
+            exercises: exercises
+        });
+    });
+
+    return template;
+}
+
+function saveAllSettings() {
+    // Save workout template
+    workoutTemplate = collectWorkoutTemplateFromEditor();
+    saveToStorage('arete-workout-template', workoutTemplate);
+
+    // Save sleep target
+    sleepTarget = {
+        min: parseFloat(document.getElementById('sleep-min').value) || 7,
+        max: parseFloat(document.getElementById('sleep-max').value) || 9
+    };
+    saveToStorage('arete-sleep-target', sleepTarget);
+
+    // Save nutrition targets
     nutritionTargets = {
         calories: 2400,
-        protein: parseInt(document.getElementById('modal-protein').value),
-        carbs: parseInt(document.getElementById('modal-carbs').value),
-        fiber: parseInt(document.getElementById('modal-fiber').value),
-        sugar: parseInt(document.getElementById('modal-sugar').value),
-        fat: parseInt(document.getElementById('modal-fat').value),
-        salt: parseInt(document.getElementById('modal-salt').value)
+        protein: parseInt(document.getElementById('settings-protein').value),
+        carbs: parseInt(document.getElementById('settings-carbs').value),
+        fiber: parseInt(document.getElementById('settings-fiber').value),
+        sugar: parseInt(document.getElementById('settings-sugar').value),
+        fat: parseInt(document.getElementById('settings-fat').value),
+        salt: parseInt(document.getElementById('settings-salt').value)
     };
-
     saveToStorage('arete-nutrition-targets', nutritionTargets);
+
+    // Update UI
     updateTargetLabels();
     updateNutritionProgress();
-    closeTargetsModal();
-}
 
-function loadWorkoutTemplate() {
-    workoutTemplate = [
-        {
-            'time': '5AM',
-            'name': 'σθενος',
-            'exercises': [
-                {'name': '[0*][10] - barbell press', 'sets': [false, false, false, false, false, false, false, false]}
-            ]
-        },
-        {
-            'time': '6AM',
-            'name': '',
-            'exercises': [
-                {'name': '[30*][10] - dumbell curl', 'sets': [false, false, false, false, false, false, false, false]},
-                {'name': '[8] wide', 'sets': [false], 'reps': 95}
-            ]
-        },
-        {
-            'time': '7AM',
-            'name': '',
-            'exercises': [
-                {'name': 'machine row', 'sets': [false, false, false, false, false, false, false, false]}
-            ]
-        }
-    ];
-    renderWorkouts([]);
+    // Re-render workouts with new template
+    const currentData = loadFromStorage(`arete-${currentDate}`);
+    renderWorkouts(currentData?.workouts || []);
+
+    // Recalculate scores with new settings
+    triggerAutoSave();
+
+    closeSettingsModal();
+
+    // Show success feedback
+    showAutoSaveIndicator('saved');
 }
 
 function loadDailyData() {
+    // Set flag to prevent auto-saves during loading
+    isLoadingData = true;
+
     const data = loadFromStorage(`arete-${currentDate}`) || {
         date: currentDate,
         workouts: [],
@@ -175,8 +513,15 @@ function loadDailyData() {
     // Update sleep
     document.getElementById('sleep-hours').value = data.sleep_hours || '';
 
-    // Update charts
-    updateCharts();
+    // Update charts (only if they're initialized)
+    if (charts.fitness) {
+        updateCharts();
+    }
+
+    // Re-enable auto-save after a short delay to ensure DOM is fully updated
+    setTimeout(() => {
+        isLoadingData = false;
+    }, 100);
 }
 
 function calculateFitnessScore(workouts) {
@@ -202,26 +547,44 @@ function calculateTasksScore(tasks) {
 
 function calculateFoodScore(nutrition) {
     if (!nutrition || Object.keys(nutrition).length === 0) return 0;
-    let score = 100;
+
+    // Check if ANY nutrition value (except calories) is greater than 0
+    const hasAnyData = Object.entries(nutrition).some(([key, value]) => {
+        if (key === 'calories') return false; // Skip calories
+        return value > 0;
+    });
+
+    // If no nutrition data entered, return 0
+    if (!hasAnyData) return 0;
+
+    let totalPercentage = 0;
+    let nutrientCount = 0;
 
     for (const [nutrient, value] of Object.entries(nutrition)) {
+        if (nutrient === 'calories') continue; // Skip calories in scoring
         const target = nutritionTargets[nutrient];
         if (target > 0) {
-            const diff = Math.abs(value - target) / target;
-            if (diff > 0.2) {
-                score -= 10;
-            }
+            // Calculate percentage of target achieved
+            const percentage = (value / target) * 100;
+            totalPercentage += percentage;
+            nutrientCount++;
         }
     }
 
-    return Math.max(0, score);
+    // Return average percentage across all nutrients
+    return nutrientCount > 0 ? Math.round(totalPercentage / nutrientCount) : 0;
 }
 
 function calculateSleepScore(sleepHours) {
-    if (sleepHours >= 7 && sleepHours <= 9) return 100;
-    if (sleepHours >= 6) return 80;
-    if (sleepHours >= 5) return 60;
-    return 40;
+    // Convert to number and handle all edge cases
+    const hours = Number(sleepHours);
+
+    // If no sleep data or invalid/zero hours, return 0
+    if (!hours || hours <= 0 || isNaN(hours)) return 0;
+
+    // Calculate raw percentage based on target midpoint
+    const targetMidpoint = (sleepTarget.min + sleepTarget.max) / 2;
+    return Math.round((hours / targetMidpoint) * 100);
 }
 
 function updateScores(scores) {
@@ -444,48 +807,6 @@ function collectNutritionData() {
     };
 }
 
-function saveData() {
-    const workouts = collectWorkoutData();
-    const tasks = collectTaskData();
-    const nutrition = collectNutritionData();
-    const sleepHours = parseFloat(document.getElementById('sleep-hours').value) || 0;
-
-    const scores = {
-        fitness: calculateFitnessScore(workouts),
-        tasks: calculateTasksScore(tasks),
-        food: calculateFoodScore(nutrition),
-        sleep: calculateSleepScore(sleepHours)
-    };
-
-    const dailyData = {
-        date: currentDate,
-        workouts: workouts,
-        tasks: tasks,
-        nutrition: nutrition,
-        sleep_hours: sleepHours,
-        scores: scores
-    };
-
-    // Save to localStorage
-    saveToStorage(`arete-${currentDate}`, dailyData);
-
-    // Update scores display
-    updateScores(scores);
-
-    // Update charts
-    updateCharts();
-
-    // Show success feedback
-    const saveBtn = document.getElementById('save-btn');
-    const originalText = saveBtn.textContent;
-    saveBtn.textContent = 'Saved!';
-    saveBtn.style.background = '#45b890';
-
-    setTimeout(() => {
-        saveBtn.textContent = originalText;
-        saveBtn.style.background = 'linear-gradient(135deg, #4ecca3 0%, #45b890 100%)';
-    }, 2000);
-}
 
 // Charts functionality
 function initializeCharts() {
@@ -502,7 +823,8 @@ function initializeCharts() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    min: 0,
+                    max: 200,
                     ticks: {
                         color: '#b0b0b0'
                     },
@@ -525,6 +847,16 @@ function initializeCharts() {
 
     charts.fitness = new Chart(document.getElementById('fitness-chart'), {
         ...chartConfig,
+        options: {
+            ...chartConfig.options,
+            scales: {
+                ...chartConfig.options.scales,
+                y: {
+                    ...chartConfig.options.scales.y,
+                    max: 100
+                }
+            }
+        },
         data: {
             labels: [],
             datasets: [{
@@ -540,6 +872,16 @@ function initializeCharts() {
 
     charts.tasks = new Chart(document.getElementById('tasks-chart'), {
         ...chartConfig,
+        options: {
+            ...chartConfig.options,
+            scales: {
+                ...chartConfig.options.scales,
+                y: {
+                    ...chartConfig.options.scales.y,
+                    max: 100
+                }
+            }
+        },
         data: {
             labels: [],
             datasets: [{

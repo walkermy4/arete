@@ -49,14 +49,11 @@ def calculate_food_score(nutrition, targets):
     return max(0, score)
 
 def calculate_sleep_score(sleep_hours):
-    if sleep_hours >= 7 and sleep_hours <= 9:
-        return 100
-    elif sleep_hours >= 6:
-        return 80
-    elif sleep_hours >= 5:
-        return 60
-    else:
-        return 40
+    if sleep_hours <= 0:
+        return 0
+    # Calculate raw percentage based on target midpoint (7-9 hours, midpoint = 8)
+    target_midpoint = 8
+    return round((sleep_hours / target_midpoint) * 100)
 
 @app.route('/')
 def home():

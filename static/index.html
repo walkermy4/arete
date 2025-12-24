@@ -12,6 +12,7 @@
         <!-- Left Panel: Data Entry -->
         <div class="left-panel">
             <header>
+                <button id="settings-btn" class="settings-btn" title="Settings">⚙️</button>
                 <h1>αρετη</h1>
                 <div class="date-nav">
                     <button id="prev-day">&larr;</button>
@@ -51,10 +52,7 @@
             </section>
 
             <section class="nutrition-section">
-                <div class="section-header">
-                    <h2>🥗 Nutrition</h2>
-                    <button id="edit-targets-btn" class="edit-btn">Edit Targets</button>
-                </div>
+                <h2>🥗 Nutrition</h2>
 
                 <div class="nutrition-grid">
                     <div class="nutrition-item">
@@ -120,8 +118,6 @@
                     <input type="number" id="sleep-hours" min="0" max="24" step="0.5">
                 </div>
             </section>
-
-            <button id="save-btn" class="save-btn">Save Progress</button>
         </div>
 
         <!-- Right Panel: Analytics -->
@@ -152,39 +148,76 @@
         </div>
     </div>
 
-    <!-- Nutrition Targets Modal -->
-    <div id="targets-modal" class="modal">
-        <div class="modal-content">
-            <h2>Edit Nutrition Targets</h2>
-            <div class="targets-grid">
-                <div class="target-input-group">
-                    <label>Protein (g):</label>
-                    <input type="number" id="modal-protein" value="175">
-                </div>
-                <div class="target-input-group">
-                    <label>Carbs (g):</label>
-                    <input type="number" id="modal-carbs" value="300">
-                </div>
-                <div class="target-input-group">
-                    <label>Fiber (g):</label>
-                    <input type="number" id="modal-fiber" value="22">
-                </div>
-                <div class="target-input-group">
-                    <label>Sugar (g):</label>
-                    <input type="number" id="modal-sugar" value="75">
-                </div>
-                <div class="target-input-group">
-                    <label>Fat (g):</label>
-                    <input type="number" id="modal-fat" value="205">
-                </div>
-                <div class="target-input-group">
-                    <label>Salt (mg):</label>
-                    <input type="number" id="modal-salt" value="4000">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content settings-modal-content">
+            <h2>⚙️ Settings</h2>
+
+            <!-- Tab Navigation -->
+            <div class="settings-tabs">
+                <button class="settings-tab active" data-tab="workout">Workout Template</button>
+                <button class="settings-tab" data-tab="sleep">Sleep Target</button>
+                <button class="settings-tab" data-tab="nutrition">Nutrition Targets</button>
+            </div>
+
+            <!-- Workout Template Tab -->
+            <div id="workout-tab" class="settings-tab-content active">
+                <div id="workout-template-editor"></div>
+                <button id="add-workout-block-btn" class="add-btn">+ Add Workout Block</button>
+            </div>
+
+            <!-- Sleep Target Tab -->
+            <div id="sleep-tab" class="settings-tab-content">
+                <div class="sleep-target-config">
+                    <div class="target-input-group">
+                        <label>Minimum Sleep Hours (for 100 points):</label>
+                        <input type="number" id="sleep-min" min="0" max="12" step="0.5" value="7">
+                    </div>
+                    <div class="target-input-group">
+                        <label>Maximum Sleep Hours (for 100 points):</label>
+                        <input type="number" id="sleep-max" min="0" max="12" step="0.5" value="9">
+                    </div>
+                    <div class="sleep-scoring-info">
+                        <p>Sleep within this range = 100 points</p>
+                        <p>Current scoring formula will adjust based on these values</p>
+                    </div>
                 </div>
             </div>
+
+            <!-- Nutrition Targets Tab -->
+            <div id="nutrition-tab" class="settings-tab-content">
+                <div class="targets-grid">
+                    <div class="target-input-group">
+                        <label>Protein (g):</label>
+                        <input type="number" id="settings-protein" value="175">
+                    </div>
+                    <div class="target-input-group">
+                        <label>Carbs (g):</label>
+                        <input type="number" id="settings-carbs" value="300">
+                    </div>
+                    <div class="target-input-group">
+                        <label>Fiber (g):</label>
+                        <input type="number" id="settings-fiber" value="22">
+                    </div>
+                    <div class="target-input-group">
+                        <label>Sugar (g):</label>
+                        <input type="number" id="settings-sugar" value="75">
+                    </div>
+                    <div class="target-input-group">
+                        <label>Fat (g):</label>
+                        <input type="number" id="settings-fat" value="205">
+                    </div>
+                    <div class="target-input-group">
+                        <label>Salt (mg):</label>
+                        <input type="number" id="settings-salt" value="4000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Buttons -->
             <div class="modal-buttons">
-                <button id="save-targets-btn" class="save-btn">Save Targets</button>
-                <button id="cancel-targets-btn" class="cancel-btn">Cancel</button>
+                <button id="save-settings-btn" class="save-btn">Save All Settings</button>
+                <button id="cancel-settings-btn" class="cancel-btn">Cancel</button>
             </div>
         </div>
     </div>
